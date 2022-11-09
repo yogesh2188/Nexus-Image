@@ -33,8 +33,7 @@ pipeline {
                 sh "docker -H ssh://ec2-user@13.235.67.190 run -d -p 8003:8080 rutujapawal/devops-integration"
  
             }
-        }
-    }
-    }
-}  
+         }
+       }
+    } 
     
