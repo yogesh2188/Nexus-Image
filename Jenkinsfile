@@ -23,7 +23,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
                       sh 'docker login -u rutujapawal -p ${dockerhubpwd}'
                       
-                      sh 'docker push rutujapawal/devops-integration'
+                      sh 'docker push rutujapawal/devops-integration:latest'
                     }    
                 }
             }
