@@ -35,7 +35,7 @@ pipeline {
         }
         stage('Run Docker container on remote hosts') {
             steps {
-                      sh "docker -H ssh://ec2-user@13.234.231.172 run -d -p 8004:8080 rutujapawal/devops-integration"
+                      sh "docker -H ssh://ec2-user@13.234.231.172 run -d -p 4000:8080 rutujapawal/devops-integration"
             }
         }
     } 
