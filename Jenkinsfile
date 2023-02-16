@@ -3,62 +3,52 @@ pipeline {
   agent any
   
    environment {
-      registry = "public.ecr.aws/t9h4g4g8/ecr_repo"
+    imageName = "docker_image"
+	registryCredentials = "nexus"
+	registry = "ec2-54-146-220-123.compute-1.amazonaws.com:8085/"
+	dockerImage = ""
   }
   
    stages {
+       
         stage('Cloning Github project/source code') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/RutujaPawal/pushDockerImage_to_AWSECRrepo.git']]])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/yogesh2188/Nexus-Image.git']])
             }
         }
         
-        stage ('Build') {
-            steps {
-                sh 'mvn clean install'           
-            }
-        }
-        
-        stage('Building image') {
+        stage('Building the docker image') {
             steps{
                  script {
-                   dockerImage = docker.build registry
+                   dockerImage = docker.build imageName
                }
             }
         }
-        
-        stage('Logging into AWS ECR') {
-          steps {
-              script {
-              sh 'aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/t9h4g4g8'
-              }
-            }
-        }
-        
-        stage('Pushing Image on ECR') {
-          steps {
-              script {
-              sh 'docker push public.ecr.aws/t9h4g4g8/ecr_repo:latest'
-              }
-            }
-        } 
-        
-        // Stopping Docker containers for cleaner Docker run
-       stage('stop previous containers') {
-          steps {
-            sh 'docker ps -f name=mypythonContainer -q | xargs --no-run-if-empty docker container stop'
-            sh 'docker container ls -a -fname=mypythonContainer -q | xargs -r docker container rm'
-           }
-        }
-        
-        stage('Docker Run') {
-          steps{
-             script {
-                sh 'docker run -d -p 8097:8080 --rm --name mypythonContainer public.ecr.aws/t9h4g4g8/ecr_repo:latest'
-              }
-            }
-        }
+		
+		stage('Upload into Nexus'){
+		      steps{
+			         script{
+				             docker.withRegistry('http://'+registry, registryCredentials){
+			                 dockerImage.push('latest')
+			            	}
+				   }	
+			}
+		}
+		
+		// Stopping Docker containers for cleaner Docker run
+    stage('stop previous containers') {
+         steps {
+            sh 'docker ps -f name=myjavacontainer -q | xargs --no-run-if-empty docker container stop'
+            sh 'docker container ls -a -fname=myjavacontainer -q | xargs -r docker container rm'
+         }
+       }
       
-    }
-    
-}    
+    stage('Docker Run') {
+       steps{
+         script {
+                sh 'docker run -d -p 8085:8080 --rm --name myjavacontainer ' + registry + imageName
+            }
+         }
+      }    
+   }
+}
